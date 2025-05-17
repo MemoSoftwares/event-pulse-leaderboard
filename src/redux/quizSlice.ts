@@ -9,7 +9,7 @@ const initialState = {
   submitted: false, // New field to track if quiz has been submitted
   score: 0,
   timeRemaining: 15 * 60, // 15 minutes in seconds
-  timeTaken: '',
+  timeTaken: 0,
 };
 
 const quizSlice = createSlice({
@@ -54,7 +54,7 @@ const quizSlice = createSlice({
       state.submitted = false;
       state.score = 0;
       state.timeRemaining = 15 * 60;
-      state.timeTaken = '';
+      state.timeTaken = 0;
     },
   },
 });

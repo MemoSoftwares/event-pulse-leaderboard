@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,16 @@ const Questions = () => {
     score, 
     timeTaken
   } = useSelector((state: RootState) => state.quiz);
+  const [elapsedTime, setElapsedTime] = useState(0);
+
+  // Increment elapsedTime every second while quiz is running
+  useEffect(() => {
+    if (completed) return;
+    const interval = setInterval(() => {
+      setElapsedTime((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [completed]);
 
   // Redirect to registration if no name is provided
   useEffect(() => {
@@ -52,10 +62,9 @@ const Questions = () => {
   };
 
   const handleTimeUp = () => {
-    const totalTime = formatTime(QUIZ_TIME);
     dispatch(completeQuiz({ 
       score: calculateScore(),
-      timeTaken: totalTime
+      timeTaken: elapsedTime
     }));
     
     toast({
@@ -83,20 +92,20 @@ const Questions = () => {
   };
 
   const handleViewLeaderboard = async () => {
-    // Prepare user data
     const userData = {
       firstName,
       lastName,
       score,
-      timeTaken
+      timeTaken: elapsedTime // Pass elapsedTime here
     };
 
-    // Save to Supabase
     const result = await saveScore(userData);
 
     if (result.success) {
-      // Optionally, you can show a toast here
-      // toast({ title: "Score Submitted!", description: "Your score has been added to the leaderboard." });
+      toast({
+        title: "Score Submitted!",
+        description: "Your score has been added to the leaderboard."
+      });
       navigate('/leaderboard');
     } else {
       toast({
@@ -143,6 +152,10 @@ const Questions = () => {
               <h1 className="text-3xl font-bold text-university-800 mb-4">Quiz Completed!</h1>
               <p className="text-2xl font-semibold mb-6">
                 Your Score: <span className="text-university-700">{score}</span>
+              </p>
+              
+              <p className="mb-2 text-gray-600">
+                Time Taken: {formatTime(elapsedTime)}
               </p>
               
               <p className="mb-8 text-gray-600">

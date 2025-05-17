@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import ChatMessage from "@/components/ChatMessage";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import axios from "axios";
 
 // Define message types for the chatbot
 type MessageType = "user" | "bot";
@@ -19,93 +19,37 @@ interface Message {
   timestamp: Date;
 }
 
-// Course information database - you can expand this
-const courseInfo = {
-  degrees: [
-    {
-      name: "Bachelor of Computer Science",
-      duration: "3 years",
-      credits: 180,
-      description: "A comprehensive program covering programming, algorithms, data structures, and software engineering principles.",
-      careers: ["Software Developer", "Web Developer", "Data Analyst", "System Administrator"]
-    },
-    {
-      name: "Master of Computer Science",
-      duration: "2 years",
-      credits: 120,
-      description: "An advanced degree focusing on specialized computing topics including AI, machine learning, and advanced software architecture.",
-      careers: ["AI Specialist", "Machine Learning Engineer", "Senior Software Engineer", "Data Scientist"]
-    },
-    {
-      name: "PhD in Computer Science",
-      duration: "3-5 years",
-      credits: "Research-based",
-      description: "A research-focused doctorate program for those interested in advancing computer science knowledge through original research.",
-      careers: ["Research Scientist", "Professor", "R&D Specialist", "Senior Technical Lead"]
-    }
-  ],
-  modules: [
-    "Introduction to Programming",
-    "Data Structures and Algorithms",
-    "Database Systems",
-    "Web Development",
-    "Artificial Intelligence",
-    "Computer Networks",
-    "Software Engineering",
-    "Cybersecurity"
-  ],
-  requirements: "Applicants should have a strong background in mathematics and logical thinking. Programming experience is beneficial but not required for undergraduate programs."
-};
+const DEEPSEEK_API_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY;
+const DEEPSEEK_ENDPOINT = "https://api.deepseek.com/v1/chat/completions";
 
-// Function to generate responses based on user input
-const generateResponse = (input: string): string => {
-  const normalizedInput = input.toLowerCase();
-  
-  if (normalizedInput.includes("degree") || normalizedInput.includes("program")) {
-    return `We offer several degree programs:\n\n${courseInfo.degrees.map(d => 
-      `• ${d.name} (${d.duration})\n  ${d.description}`
-    ).join('\n\n')}`;
+const PDF_URLS = [
+    "https://bmryguhgqcqdmcjtquha.supabase.co/storage/v1/object/public/pdfs//DSA-2.pdf",
+];
+
+async function queryDeepSeekPDF(question: string): Promise<string> {
+  try {
+    const response = await axios.post(
+      DEEPSEEK_ENDPOINT,
+      {
+        model: "deepseek-chat",
+        messages: [
+          { role: "system", content: "Generates an answer based on relevant mention documents and university web" },
+          { role: "user", content: question }
+        ],
+        documents: PDF_URLS.map(url => ({ url }))
+      },
+      {
+        headers: {
+          "Authorization": `Bearer ${DEEPSEEK_API_KEY}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+    return response.data.choices[0].message.content;
+  } catch (error) {
+    return "Sorry, I couldn't fetch information from the PDF.";
   }
-  
-  if (normalizedInput.includes("bachelor")) {
-    const degree = courseInfo.degrees.find(d => d.name.toLowerCase().includes("bachelor"));
-    return degree ? 
-      `The ${degree.name} is a ${degree.duration} program requiring ${degree.credits} credits. ${degree.description}\n\nCareer opportunities include: ${degree.careers.join(", ")}.` : 
-      "I don't have information about that specific bachelor degree.";
-  }
-  
-  if (normalizedInput.includes("master")) {
-    const degree = courseInfo.degrees.find(d => d.name.toLowerCase().includes("master"));
-    return degree ? 
-      `The ${degree.name} is a ${degree.duration} program requiring ${degree.credits} credits. ${degree.description}\n\nCareer opportunities include: ${degree.careers.join(", ")}.` : 
-      "I don't have information about that specific master degree.";
-  }
-  
-  if (normalizedInput.includes("phd") || normalizedInput.includes("doctorate")) {
-    const degree = courseInfo.degrees.find(d => d.name.toLowerCase().includes("phd"));
-    return degree ? 
-      `The ${degree.name} is a ${degree.duration} program. ${degree.description}\n\nCareer opportunities include: ${degree.careers.join(", ")}.` : 
-      "I don't have information about that specific PhD program.";
-  }
-  
-  if (normalizedInput.includes("module") || normalizedInput.includes("course") || normalizedInput.includes("subject")) {
-    return `Our curriculum includes the following modules:\n\n${courseInfo.modules.map(m => `• ${m}`).join('\n')}`;
-  }
-  
-  if (normalizedInput.includes("requirement") || normalizedInput.includes("qualify") || normalizedInput.includes("apply")) {
-    return `${courseInfo.requirements}`;
-  }
-  
-  if (normalizedInput.includes("career") || normalizedInput.includes("job") || normalizedInput.includes("employment")) {
-    return `Our graduates find successful careers in various fields including:\n\n${Array.from(new Set(courseInfo.degrees.flatMap(d => d.careers))).map(c => `• ${c}`).join('\n')}`;
-  }
-  
-  if (normalizedInput.includes("hello") || normalizedInput.includes("hi")) {
-    return "Hello! I'm the university course assistant. How can I help you with information about our degrees and courses?";
-  }
-  
-  return "I'm not sure about that. You can ask me about our degree programs, course modules, entry requirements, or career opportunities for graduates.";
-};
+}
 
 const Chatbot = () => {
   const [messages, setMessages] = useState<Message[]>([
@@ -129,11 +73,10 @@ const Chatbot = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       text: input,
@@ -145,19 +88,23 @@ const Chatbot = () => {
     setInput("");
     setIsTyping(true);
 
-    // Simulate bot thinking time
-    setTimeout(() => {
-      const botResponse = generateResponse(input);
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: botResponse,
-        type: "bot",
-        timestamp: new Date(),
-      };
-      
-      setMessages((prev) => [...prev, botMessage]);
-      setIsTyping(false);
-    }, 1000);
+    // Await async response
+    const botResponse = await generateResponse(input);
+    const botMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      text: botResponse,
+      type: "bot",
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, botMessage]);
+    setIsTyping(false);
+  };
+
+  const generateResponse = async (input: string): Promise<string> => {
+    const normalizedInput = input.toLowerCase();
+
+    return await queryDeepSeekPDF(input);
   };
 
   // Function to save the current conversation to local storage

@@ -65,7 +65,7 @@ const Navbar = () => {
                 }`}
             >
               <MessageCircle className="mr-1 h-4 w-4" />
-              Course Info
+              Chatbot
             </Link>
 
             <Link

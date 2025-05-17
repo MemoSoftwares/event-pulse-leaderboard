@@ -2,7 +2,7 @@
 import React from "react";
 import { MessageCircle, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
-
+import ReactMarkdown from "react-markdown";
 interface Message {
   id: string;
   text: string;
@@ -38,7 +38,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
             : "bg-university-700 text-white"
         )}
       >
-        <div className="whitespace-pre-line">{message.text}</div>
+        <ReactMarkdown>{message.text}</ReactMarkdown>
         <div
           className={cn(
             "text-xs mt-1",

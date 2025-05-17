@@ -23,7 +23,7 @@ const LeaderboardTable = ({ entries }: LeaderboardTableProps) => {
             <TableHead className="w-16 text-center">Rank</TableHead>
             <TableHead>Name</TableHead>
             <TableHead className="text-right">Score</TableHead>
-            <TableHead className="text-right hidden md:table-cell">Time</TableHead>
+            <TableHead className="text-right hidden md:table-cell">Time (s)</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

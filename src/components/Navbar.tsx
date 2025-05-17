@@ -81,6 +81,17 @@ const Navbar = () => {
             </Link>
 
             <Link
+              to="/collaboration"
+              className={`px-3 py-2 text-sm font-medium rounded-md ${
+                isActive("/collaboration")
+                  ? "text-university-800 bg-blue-50"
+                  : "text-gray-600 hover:text-university-700 hover:bg-gray-50"
+              }`}
+            >
+              Collaborations
+            </Link>
+
+            <Link
               to="/about"
               className={`px-3 py-2 text-sm font-medium rounded-md ${
                 isActive("/about")

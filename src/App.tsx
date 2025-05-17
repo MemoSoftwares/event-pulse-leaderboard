@@ -14,6 +14,7 @@ import UserRegistration from "./pages/UserRegistration";
 import About from "@/pages/About.tsx";
 import Chatbot from "./pages/Chatbot";
 import FAQ from "./pages/FAQ";
+import Collaboration from "./pages/Collaboration";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/chatbot" element={<Chatbot />} />
             <Route path="/faq" element={<FAQ />} />
+            <Route path="/collaboration" element={<Collaboration />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

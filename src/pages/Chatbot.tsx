@@ -3,7 +3,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircle, Book, Info } from "lucide-react";
+import { MessageCircle, Book, Info, BookmarkPlus } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import ChatMessage from "@/components/ChatMessage";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -118,6 +119,7 @@ const Chatbot = () => {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     scrollToBottom();
@@ -158,6 +160,62 @@ const Chatbot = () => {
     }, 1000);
   };
 
+  // Function to save the current conversation to local storage
+  const saveConversation = () => {
+    // Find the last user question and bot answer
+    let userQuestion = "";
+    let botAnswer = "";
+    
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].type === "bot" && !botAnswer) {
+        botAnswer = messages[i].text;
+      } else if (messages[i].type === "user" && !userQuestion) {
+        userQuestion = messages[i].text;
+      }
+      
+      if (userQuestion && botAnswer) break;
+    }
+    
+    if (userQuestion && botAnswer) {
+      // Get existing saved messages
+      const savedMessages = JSON.parse(localStorage.getItem('savedChatMessages') || '[]');
+      
+      // Check if this Q&A is already saved
+      const isDuplicate = savedMessages.some(
+        (item: {question: string, answer: string}) => 
+          item.question === userQuestion && item.answer === botAnswer
+      );
+      
+      if (!isDuplicate) {
+        // Add new message pair
+        savedMessages.push({
+          question: userQuestion,
+          answer: botAnswer
+        });
+        
+        // Save back to localStorage
+        localStorage.setItem('savedChatMessages', JSON.stringify(savedMessages));
+        
+        toast({
+          title: "Saved to FAQ",
+          description: "This conversation has been added to your FAQs.",
+        });
+      } else {
+        toast({
+          title: "Already Saved",
+          description: "This Q&A is already in your FAQs.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      toast({
+        title: "Cannot Save",
+        description: "There needs to be at least one question and answer to save.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -165,9 +223,19 @@ const Chatbot = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-lg shadow-md overflow-hidden border">
             <div className="bg-university-800 text-white p-4">
-              <div className="flex items-center">
-                <MessageCircle className="mr-2" />
-                <h1 className="text-xl font-bold">University Course Assistant</h1>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <MessageCircle className="mr-2" />
+                  <h1 className="text-xl font-bold">University Course Assistant</h1>
+                </div>
+                <Button 
+                  onClick={saveConversation} 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-white border-white hover:bg-white/20"
+                >
+                  <BookmarkPlus className="mr-1 h-4 w-4" /> Save to FAQ
+                </Button>
               </div>
               <p className="text-sm text-university-100 mt-1">
                 Ask about our degrees, courses, requirements, or career opportunities

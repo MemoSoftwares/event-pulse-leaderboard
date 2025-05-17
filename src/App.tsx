@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import UserRegistration from "./pages/UserRegistration";
 import About from "@/pages/About.tsx";
 import Chatbot from "./pages/Chatbot";
+import FAQ from "./pages/FAQ";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/about" element={<About />} />
             <Route path="/chatbot" element={<Chatbot />} />
+            <Route path="/faq" element={<FAQ />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
